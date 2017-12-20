@@ -1,0 +1,13 @@
+Package: ecm
+Type: Package
+Title: Build Error Correction Models
+Imports:
+    stats,
+    car
+Version: 3.0.0
+Author: Gaurav Bansal
+Maintainer: Gaurav Bansal <gaurbans@gmail.com>
+Description: Functions for easy building of error correction models (ECM) for time series regression. 
+License: GPL (>= 2)
+LazyData: TRUE
+RoxygenNote: 6.0.1
