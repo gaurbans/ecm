@@ -30,7 +30,7 @@
 #'
 #'@export
 #'@importFrom stats lm complete.cases step
-ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", ...) {
+ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
   }
@@ -44,12 +44,13 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", ...) 
   xtrnames <- paste0("delta", xtrnames)
   xtr <- as.data.frame(xtr)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
-  dy <- diff(y, 1)
   
   yLag1 <- y[1:(length(y) - 1)]
   x <- cbind(xtr, xeq[complete.cases(xeq), ])
   x <- cbind(x, yLag1)
   names(x) <- c(xtrnames, xeqnames, "yLag1")
+  x$dy <- diff(y, 1)
+  
   if (includeIntercept){
     full <- lm(dy ~ ., data = x, ...)
   } else {

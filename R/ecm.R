@@ -42,7 +42,7 @@
 #'
 #'@export
 #'@importFrom stats lm
-ecm <- function (y, xeq, xtr, includeIntercept = TRUE, ...) {
+ecm <- function (y, xeq, xtr, includeIntercept = TRUE, k = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
   }
@@ -59,17 +59,45 @@ ecm <- function (y, xeq, xtr, includeIntercept = TRUE, ...) {
   xtrnames <- paste0("delta", xtrnames)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
   
-  dy <- diff(y, 1)
-  
   yLag1 <- y[1:(length(y) - 1)]
   x <- cbind(xtr, xeq[complete.cases(xeq), ])
   x <- cbind(x, yLag1)
   names(x) <- c(xtrnames, xeqnames, "yLag1")
+  x$dy <- diff(y, 1)
   
   if (includeIntercept){
     ecm <- lm(dy ~ ., data = x, ...)
   } else {
     ecm <- lm(dy ~ . - 1, data = x, ...)
+  }
+  
+  if(!is.null(k)){
+    folds <- cut(seq(1, nrow(x)), breaks=k, labels=FALSE)
+    if (includeIntercept){
+      coefs <- data.frame(ecm1=numeric(length(x)))
+      for(i in 1:k){
+        tstIdx <- which(folds==i, arr.ind = TRUE)
+        xtst <- x[tstIdx, ]
+        xtrn <- x[-tstIdx, ]
+        coefs[, paste0('ecm', i)] <- lm(dy ~ ., data = xtrn, ...)$coefficients
+      }
+      ecmnames <- names(ecm$coefficients)
+      ecm$coefficients <- rowMeans(coefs)
+      names(ecm$coefficients) <- ecmnames
+      
+    } else {
+      coefs <- data.frame(ecm1 = numeric(length(x) - 1))
+      for(i in 1:k){
+        tstIdx <- which(folds==i, arr.ind = TRUE)
+        xtst <- x[tstIdx, ]
+        xtrn <- x[-tstIdx, ]
+        coefs[, paste0('ecm', i)] <- lm(dy ~ . - 1, data = xtrn, ...)$coefficients
+      }
+      ecmnames <- names(ecm$coefficients)
+      ecm$coefficients <- rowMeans(coefs)
+      names(ecm$coefficients) <- ecmnames
+    }
+    
   }
   
   return(ecm)
