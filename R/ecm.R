@@ -6,7 +6,7 @@
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
 #'@param includeIntercept Boolean whether the y-intercept should be included
-#'@param ... Additional arguments to be passed to the 'lm' function (careful in that the these may need to be modified for ecm or may not be appropriate!)
+#'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)
 #'@return an lm object representing an error correction model
 #'@details
 #'The general format of an ECM is \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma(y_{t-1} - (\alpha_{1}x_{1,t-1} +...+ \alpha_{i}x_{i,t-1})).}

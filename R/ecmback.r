@@ -8,6 +8,7 @@
 #'@param xtr The variables to be used in the transient term of the error correction model
 #'@param includeIntercept Boolean whether the y-intercept should be included
 #'@param criterion Whether AIC (default), BIC, or adjustedR2 should be used to select variables 
+#'@param ... Additional arguments to be passed to the 'lm' function
 #'@return an lm object representing an error correction model using backwards selection
 #'@details
 #'When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
@@ -29,7 +30,7 @@
 #'
 #'@export
 #'@importFrom stats lm complete.cases step
-ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC") {
+ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
   }
@@ -50,9 +51,9 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC") {
   x <- cbind(x, yLag1)
   names(x) <- c(xtrnames, xeqnames, "yLag1")
   if (includeIntercept){
-    full <- lm(dy ~ ., data = x)
+    full <- lm(dy ~ ., data = x, ...)
   } else {
-    full <- lm(dy ~ .-1, data = x)
+    full <- lm(dy ~ .-1, data = x, ...)
   }
   null <- lm(dy ~ yLag1, data = x)
   if (criterion == "AIC" | criterion == "BIC") {
@@ -74,15 +75,15 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC") {
         x <- newx
         ecm <- partial
         if (includeIntercept){
-          full <- lm(dy ~ ., data = x)
+          full <- lm(dy ~ ., data = x, ...)
         } else {
-          full <- lm(dy ~ .-1, data = x)
+          full <- lm(dy ~ .-1, data = x, ...)
         }
       } else {
         if (includeIntercept){
-          ecm <- lm(dy ~ ., data = x)
+          ecm <- lm(dy ~ ., data = x, ...)
         } else {
-          ecm <- lm(dy ~ .-1, data = x)
+          ecm <- lm(dy ~ .-1, data = x, ...)
         }
       }
     }

@@ -15,7 +15,7 @@ ecm(y, xeq, xtr, includeIntercept = TRUE, ...)
 
 \item{includeIntercept}{Boolean whether the y-intercept should be included}
 
-\item{...}{Additional arguments to be passed to the 'lm' function (careful in that the these may need to be modified for ecm or may not be appropriate!)}
+\item{...}{Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)}
 }
 \value{
 an lm object representing an error correction model
