@@ -31,11 +31,11 @@
 #'
 #'@export
 #'@importFrom stats lm complete.cases step
-ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weights = NULL, ...) {
+ecmaveback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k = NULL, weights = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
   }
-
+  
   xeqnames <- names(xeq)
   xeqnames <- paste0(xeqnames, "Lag1")
   xeq <- as.data.frame(xeq)
@@ -53,21 +53,33 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
   x$dy <- diff(y, 1)
   
   if (includeIntercept){
-    full <- lm(dy ~ ., data = x, ...)
-    null <- lm(dy ~ yLag1, data = x)
+    formula <- "dy ~ ."
+    full <- lmave(formula = formula, data = x, k = k, ...)
   } else {
-    full <- lm(dy ~ .-1, data = x, ...)
-    null <- lm(dy ~ yLag1 - 1, data = x)
+    formula <- "dy ~ . - 1"
+    full <- lmave(formula = formula, data = x, k = k, ...)
   }
-    
+  
   if (criterion == "AIC" | criterion == "BIC") {
     if (criterion == "AIC") {
-      kIC = 2
+      kIC <- 2
     } else if (criterion == "BIC") {
-      kIC = log(nrow(x))
+      kIC <- log(nrow(x))
     }
-    ecm <- step(full, data = x, scope = list(upper = full, lower = null), direction = "backward", k = kIC, trace = 0)
-  } else if (criterion == "adjustedR2") {
+    
+    fullAIC <- partialAIC <- AIC(full, k=kIC)
+    while (partialAIC <= fullAIC){
+      todrop <- rownames(drop1(full, k=kIC))[-grep('none|yLag1', rownames(drop1(full, k=kIC)))][which.min(drop1(full, k=kIC)$AIC[-grep('none|yLag1', rownames(drop1(full, k=kIC)))])]
+      formula <- paste0(formula, ' - ', todrop)
+      full <- lmave(formula = formula, data = x, k = k, ...)
+      partialAIC <- AIC(full)
+      if (partialAIC < fullAIC & length(rownames(drop1(full))) > 2){
+        fullAIC <- partialAIC
+      } else {
+        ecm <- full
+      }
+    }
+  } else if (criterion == 'adjustedR2'){
     fullAdjR2 <- partialAdjR2 <- summary(full)$adj.r.sq
     while (partialAdjR2 >= fullAdjR2) {
       fullAdjR2 <- summary(full)$adj.r.sq
@@ -77,22 +89,12 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
         todrop <- which.max(summary(full)$coef[, 4])
       }
       newx <- x[which(!names(x) %in% names(todrop))]
-      partial <- lm(dy ~ ., data = newx)
-      partialAdjR2 <- summary(partial)$adj.r.sq
+      full <- lmave(formula = formula, data = newx, k = k, ...)
+      partialAdjR2 <- summary(full)$adj.r.sq
       if (partialAdjR2 >= fullAdjR2) {
         x <- newx
-        ecm <- partial
-        if (includeIntercept){
-          full <- lm(dy ~ ., data = x, ...)
-        } else {
-          full <- lm(dy ~ . - 1, data = x, ...)
-        }
       } else {
-        if (includeIntercept){
-          ecm <- lm(dy ~ ., data = x, ...)
-        } else {
-          ecm <- lm(dy ~ . - 1, data = x, ...)
-        }
+        ecm <- full
       }
     }
   }

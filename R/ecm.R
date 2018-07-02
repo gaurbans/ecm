@@ -6,6 +6,7 @@
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
 #'@param includeIntercept Boolean whether the y-intercept should be included
+#'@param weights Optional vector of weights to be passed to the fitting process
 #'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)
 #'@return an lm object representing an error correction model
 #'@details
@@ -42,7 +43,7 @@
 #'
 #'@export
 #'@importFrom stats lm
-ecm <- function (y, xeq, xtr, includeIntercept = TRUE, k = NULL, ...) {
+ecm <- function (y, xeq, xtr, includeIntercept = TRUE, weights = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
   }
@@ -66,38 +67,9 @@ ecm <- function (y, xeq, xtr, includeIntercept = TRUE, k = NULL, ...) {
   x$dy <- diff(y, 1)
   
   if (includeIntercept){
-    ecm <- lm(dy ~ ., data = x, ...)
+    ecm <- lm(dy ~ ., data = x, weights = weights, ...)
   } else {
-    ecm <- lm(dy ~ . - 1, data = x, ...)
-  }
-  
-  if(!is.null(k)){
-    folds <- cut(seq(1, nrow(x)), breaks=k, labels=FALSE)
-    if (includeIntercept){
-      coefs <- data.frame(ecm1=numeric(length(x)))
-      for(i in 1:k){
-        tstIdx <- which(folds==i, arr.ind = TRUE)
-        xtst <- x[tstIdx, ]
-        xtrn <- x[-tstIdx, ]
-        coefs[, paste0('ecm', i)] <- lm(dy ~ ., data = xtrn, ...)$coefficients
-      }
-      ecmnames <- names(ecm$coefficients)
-      ecm$coefficients <- rowMeans(coefs)
-      names(ecm$coefficients) <- ecmnames
-      
-    } else {
-      coefs <- data.frame(ecm1 = numeric(length(x) - 1))
-      for(i in 1:k){
-        tstIdx <- which(folds==i, arr.ind = TRUE)
-        xtst <- x[tstIdx, ]
-        xtrn <- x[-tstIdx, ]
-        coefs[, paste0('ecm', i)] <- lm(dy ~ . - 1, data = xtrn, ...)$coefficients
-      }
-      ecmnames <- names(ecm$coefficients)
-      ecm$coefficients <- rowMeans(coefs)
-      names(ecm$coefficients) <- ecmnames
-    }
-    
+    ecm <- lm(dy ~ . - 1, data = x, weights = weights, ...)
   }
   
   return(ecm)

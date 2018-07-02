@@ -2,7 +2,7 @@
 #'
 #'A dataset containing quarterly performance of the Wilshire 5000 index, corporate profits, Federal Reserve funds rate, and the unemployment rate.
 #'@usage data(Wilshire)
-#'@format A data frame with 182 rows and 6 variables:
+#'@format A data frame with 188 rows and 5 variables:
 #'\describe{
 #' \item{date}{monthly date}
 #' \item{Wilshire5000}{quarterly Wilshire 5000 index, in value}
