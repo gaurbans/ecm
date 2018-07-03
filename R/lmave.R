@@ -28,42 +28,40 @@
 #'modelave <- lmave('Wilshire5000 ~ .', data = Wilshire, k = 5) 
 #'
 #'@export
-#'@importFrom stats lm
+#'@importFrom stats lm coef
 lmave <- function(formula, data, k, method = 'boot', seed = 5, weights = NULL, ...){
   lmall <- lm(formula, data, ...)
+  modellist <- 1:k
   
   if (method == 'fold'){
     folds <- cut(seq(1, nrow(data)), breaks=k, labels=FALSE)
-    for(i in 1:k){
+    models <- lapply(modellist, function(i) {
       tstIdx <- which(folds==i, arr.ind = TRUE)
       trn <- data[-tstIdx, ]
       if (!is.null(weights)){
         w <- weights[-tstIdx]
-        assign(paste0('lm', i), lm(as.formula(formula), data = trn, weights = w, ...))
-      } else if (is.null(weights)){
-        assign(paste0('lm', i), lm(as.formula(formula), data = trn, ...))
+        lm(as.formula(formula), data = trn, weights = w, ...)
+      } else if (is.null(weights)) {
+        lm(as.formula(formula), data = trn, ...)
       }
-    }
+      
+    })
   } else if (method == 'boot'){
     set.seed(seed)
-    for (i in 1:k) {
-      trnIdx <- sample(nrow(data), (k - 1) / k * nrow(data))
-      trn <- data[trnIdx, ]
+    models <- lapply(modellist, function(i) {
+      tstIdx <- sample(nrow(data), 1 / k * nrow(data))
+      trn <- data[-tstIdx, ]
       if (!is.null(weights)){
-        w <- weights[trnIdx]
-        assign(paste0('lm', i), lm(as.formula(formula), data = trn, weights = w, ...))
+        w <- weights[-tstIdx]
+        lm(as.formula(formula), data = trn, weights = w, ...)
       } else if (is.null(weights)){
-        assign(paste0('lm', i), lm(as.formula(formula), data = trn, ...))
+        lm(as.formula(formula), data = trn, ...)
       }
-    }
+    })
   }
   
-  coefs <- data.frame(lm1=numeric(length(lm1$coefficients)))
-  for(i in 1:k){
-    coefs[, paste0('lm', i)] <- get(paste0('lm', i))$coefficients
-  }
   lmnames <- names(lmall$coefficients)
-  lmall$coefficients <- rowMeans(coefs)
+  lmall$coefficients <- rowMeans(as.data.frame(sapply(models, function(m) coef(m))))
   names(lmall$coefficients) <- lmnames
   lmall$fitted.values <- predict(lmall, data)
   target <- trimws(gsub('~.*$', '', formula))
