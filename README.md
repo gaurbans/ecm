@@ -1,5 +1,5 @@
 # ecm
 
-This package allows users to build error correction models (ECM). While other R packages allow users to do this, the advantage to this package is that the user may select different variables for the transient and equilibrium terms of the ECM, and may also build an ECM in conjunction with backwards selection for variables.  
+This package allows users to build error correction models (ECM). While other R packages allow users to do this, this package allows the user to build ECM models on the data.frame structure, select different variables for the transient and equilibrium terms of the ECM, use backwards selection to choose ECM variables, and average multiple ECM models into one ECM.  
 
-This is version 3.1.0
+This is version 4.0.0
