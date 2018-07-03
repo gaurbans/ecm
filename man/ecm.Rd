@@ -4,7 +4,7 @@
 \alias{ecm}
 \title{Build an error correction model}
 \usage{
-ecm(y, xeq, xtr, includeIntercept = TRUE, ...)
+ecm(y, xeq, xtr, includeIntercept = TRUE, weights = NULL, ...)
 }
 \arguments{
 \item{y}{The target variable}
@@ -14,6 +14,8 @@ ecm(y, xeq, xtr, includeIntercept = TRUE, ...)
 \item{xtr}{The variables to be used in the transient term of the error correction model}
 
 \item{includeIntercept}{Boolean whether the y-intercept should be included}
+
+\item{weights}{Optional vector of weights to be passed to the fitting process}
 
 \item{...}{Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)}
 }
@@ -43,8 +45,8 @@ ECM models are used for time series data. This means the user may need to consid
 #Federal Reserve funds rate, and unemployment rate
 data(Wilshire)
 
-#Use 2014-12-01 and earlier data to build models
-trn <- Wilshire[Wilshire$date<='2014-12-01',]
+#Use 2015-12-01 and earlier data to build models
+trn <- Wilshire[Wilshire$date<='2015-12-01',]
 
 #Assume all predictors are needed in the equilibrium and transient terms of ecm
 xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]

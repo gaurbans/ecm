@@ -28,8 +28,8 @@
 #'#Federal Reserve funds rate, and unemployment rate
 #'data(Wilshire)
 #'
-#'#Use 2014-12-01 and earlier data to build models
-#'trn <- Wilshire[Wilshire$date<='2014-12-01',]
+#'#Use 2015-12-01 and earlier data to build models
+#'trn <- Wilshire[Wilshire$date<='2015-12-01',]
 #'
 #'#Assume all predictors are needed in the equilibrium and transient terms of ecm
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]

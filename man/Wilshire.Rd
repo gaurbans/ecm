@@ -4,7 +4,7 @@
 \name{Wilshire}
 \alias{Wilshire}
 \title{FRED data on the Wilshire 5000 index and other economic factors}
-\format{A data frame with 182 rows and 6 variables:
+\format{A data frame with 188 rows and 5 variables:
 \describe{
 \item{date}{monthly date}
 \item{Wilshire5000}{quarterly Wilshire 5000 index, in value}

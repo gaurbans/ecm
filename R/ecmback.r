@@ -9,7 +9,7 @@
 #'@param includeIntercept Boolean whether the y-intercept should be included
 #'@param criterion Whether AIC (default), BIC, or adjustedR2 should be used to select variables
 #'@param weights Optional vector of weights to be passed to the fitting process
-#'@param ... Additional arguments to be passed to the 'lm' function
+#'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)
 #'@return an lm object representing an error correction model using backwards selection
 #'@details
 #'When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
@@ -19,8 +19,8 @@
 #'#Federal Reserve funds rate, and unemployment rate
 #'data(Wilshire)
 #'
-#'#Use 2014-12-01 and earlier data to build models
-#'trn <- Wilshire[Wilshire$date<='2014-12-01',]
+#'#Use 2015-12-01 and earlier data to build models
+#'trn <- Wilshire[Wilshire$date<='2015-12-01',]
 #'
 #'#Use backwards selection to choose which predictors are needed 
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
