@@ -73,7 +73,7 @@ ecmaveback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k,
     fullAIC <- partialAIC <- AIC(full, k=kIC)
     while (partialAIC <= fullAIC){
       todrop <- rownames(drop1(full, k=kIC))[-grep('none|yLag1', rownames(drop1(full, k=kIC)))][which.min(drop1(full, k=kIC)$AIC[-grep('none|yLag1', rownames(drop1(full, k=kIC)))])]
-      formula <- paste0(formula, ' - ', todrop)
+      x <- x[-which(names(x) %in% todrop)]
       full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
       partialAIC <- AIC(full)
       if (partialAIC < fullAIC & length(rownames(drop1(full))) > 2){
