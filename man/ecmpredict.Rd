@@ -23,6 +23,8 @@ Takes an ecm object and uses it to predict based on new data.
 Since error correction models only model the change in the target variable, an initial value must be specified. Additionally, the 'newdata' parameter should have at least 3 rows of data.
 }
 \examples{
+##Not run
+
 data(Wilshire)
 
 #Rebuilding model1 from ecm example

@@ -5,7 +5,7 @@
 \title{Backwards selection to build an error correction model}
 \usage{
 ecmback(y, xeq, xtr, includeIntercept = T, criterion = "AIC",
-  weights = NULL, ...)
+  weights = NULL, keep = NULL, ...)
 }
 \arguments{
 \item{y}{The target variable}
@@ -20,6 +20,8 @@ ecmback(y, xeq, xtr, includeIntercept = T, criterion = "AIC",
 
 \item{weights}{Optional vector of weights to be passed to the fitting process}
 
+\item{keep}{Optional character vector of variables to forcibly retain}
+
 \item{...}{Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)}
 }
 \value{
@@ -28,12 +30,15 @@ an lm object representing an error correction model using backwards selection
 \description{
 Much like the ecm function, this builds an error correction model.
 However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, or highest adjusted R-squared, rather than using all predictors.
-ecmback has the same parameters and output as ecm.
 }
 \details{
 When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
+
+If using weights, the length of weights should be one less than the number of rows in xeq or xtr.
 }
 \examples{
+##Not run
+
 #Use ecm to predict Wilshire 5000 index based on corporate profits, 
 #Federal Reserve funds rate, and unemployment rate
 data(Wilshire)
@@ -43,10 +48,14 @@ trn <- Wilshire[Wilshire$date<='2015-12-01',]
 
 #Use backwards selection to choose which predictors are needed 
 xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
-modelback <- ecmback(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE, criterion = 'AIC')
+modelback <- ecmback(trn$Wilshire5000, xeq, xtr)
 print(modelback)
-#Backwards selection chose CorpProfits in the equilibrium term, 
+#Backwards selection chose CorpProfits and FedFundsRate in the equilibrium term, 
 #CorpProfits and UnempRate in the transient term.
+
+modelbackFFR <- ecmback(trn$Wilshire5000, xeq, xtr, keep = 'UnempRate')
+print(modelbackFFR)
+#Backwards selection was forced to retain UnempRate in both terms.
 
 }
 \seealso{

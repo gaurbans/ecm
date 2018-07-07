@@ -2,10 +2,10 @@
 % Please edit documentation in R/ecmaveback.r
 \name{ecmaveback}
 \alias{ecmaveback}
-\title{Backwards selection using averaged error correction model}
+\title{Backwards selection using an averaged error correction model}
 \usage{
 ecmaveback(y, xeq, xtr, includeIntercept = T, criterion = "AIC", k,
-  method = "boot", seed = 5, weights = NULL, ...)
+  method = "boot", seed = 5, weights = NULL, keep = NULL, ...)
 }
 \arguments{
 \item{y}{The target variable}
@@ -26,20 +26,25 @@ ecmaveback(y, xeq, xtr, includeIntercept = T, criterion = "AIC", k,
 
 \item{weights}{Optional vector of weights to be passed to the fitting process}
 
+\item{keep}{Optional character vector of variables to forcibly retain}
+
 \item{...}{Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)}
 }
 \value{
 an lm object representing an error correction model using backwards selection
 }
 \description{
-Much like the ecm function, this builds an error correction model.
-However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, or highest adjusted R-squared, rather than using all predictors.
-ecmback has the same parameters and output as ecm.
+Much like the ecmback function, ecmaveback uses backwards selection to build an error correction model.
+However, it uses the averaging method of ecmave to build models and then choose variables based on lowest AIC or BIC, or highest adjusted R-squared.
 }
 \details{
 When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
+
+If using weights, the length of weights should be one less than the number of rows in xeq or xtr.
 }
 \examples{
+##Not run
+
 #Use ecm to predict Wilshire 5000 index based on corporate profits, 
 #Federal Reserve funds rate, and unemployment rate
 data(Wilshire)
@@ -51,8 +56,12 @@ trn <- Wilshire[Wilshire$date<='2015-12-01',]
 xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
 modelaveback <- ecmaveback(trn$Wilshire5000, xeq, xtr, k = 5)
 print(modelaveback)
-#Backwards selection of averaged ECM models chose only CorpProfits in the equilibrium and 
-#transient terms.
+#Backwards selection chose CorpProfits and FedFundsRate in the equilibrium term, 
+#CorpProfits and UnempRate in the transient term.
+
+modelavebackFFR <- ecmaveback(trn$Wilshire5000, xeq, xtr, k = 5, keep = 'UnempRate')
+print(modelavebackFFR)
+#Backwards selection was forced to retain UnempRate in both terms.
 
 }
 \seealso{

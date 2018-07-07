@@ -2,7 +2,6 @@
 #'
 #'Much like the ecm function, this builds an error correction model.
 #'However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, or highest adjusted R-squared, rather than using all predictors.
-#'ecmback has the same parameters and output as ecm.
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
@@ -14,8 +13,12 @@
 #'@return an lm object representing an error correction model using backwards selection
 #'@details
 #'When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
+#'
+#'If using weights, the length of weights should be one less than the number of rows in xeq or xtr. 
 #'@seealso \code{lm}
 #'@examples
+#'##Not run
+#'
 #'#Use ecm to predict Wilshire 5000 index based on corporate profits, 
 #'#Federal Reserve funds rate, and unemployment rate
 #'data(Wilshire)
@@ -25,12 +28,12 @@
 #'
 #'#Use backwards selection to choose which predictors are needed 
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
-#'modelback <- ecmback(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
+#'modelback <- ecmback(trn$Wilshire5000, xeq, xtr)
 #'print(modelback)
-#'#Backwards selection chose CorpProfits in the equilibrium term, 
+#'#Backwards selection chose CorpProfits and FedFundsRate in the equilibrium term, 
 #'#CorpProfits and UnempRate in the transient term.
 #'
-#'modelbackFFR <- ecmback(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE, keep = 'UnempRate')
+#'modelbackFFR <- ecmback(trn$Wilshire5000, xeq, xtr, keep = 'UnempRate')
 #'print(modelbackFFR)
 #'#Backwards selection was forced to retain UnempRate in both terms.
 #'
@@ -39,6 +42,10 @@
 ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weights = NULL, keep = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
+  }
+  
+  if (class(xtr) != "data.frame" | class(xeq) != "data.frame") {
+    stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
   }
   
   xeqnames <- names(xeq)
@@ -132,4 +139,3 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
   
   return(ecm)
 }
-

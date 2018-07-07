@@ -12,6 +12,8 @@
 #'
 #'@seealso \code{lm}
 #'@examples
+#'##Not run
+#'
 #'#Build a simple AR1 model to predict performance of the Wilshire 5000 Index
 #'data(Wilshire)
 #'Wilshire$Wilshire5000Lag1 <- c(NA, Wilshire$Wilshire5000[1:(nrow(Wilshire)-1)])

@@ -1,8 +1,7 @@
-#'Backwards selection using averaged error correction model
+#'Backwards selection using an averaged error correction model
 #'
-#'Much like the ecm function, this builds an error correction model.
-#'However, it uses backwards selection to select the optimal predictors based on lowest AIC or BIC, or highest adjusted R-squared, rather than using all predictors.
-#'ecmback has the same parameters and output as ecm.
+#'Much like the ecmback function, ecmaveback uses backwards selection to build an error correction model.
+#'However, it uses the averaging method of ecmave to build models and then choose variables based on lowest AIC or BIC, or highest adjusted R-squared.
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
@@ -12,12 +11,17 @@
 #'@param method Whether to split data by folds ("fold") or by bootstrapping ("boot")
 #'@param seed Seed for reproducibility (only needed if method is "boot")
 #'@param weights Optional vector of weights to be passed to the fitting process
+#'@param keep Optional character vector of variables to forcibly retain
 #'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)
 #'@return an lm object representing an error correction model using backwards selection
 #'@details
 #'When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
+#'
+#'If using weights, the length of weights should be one less than the number of rows in xeq or xtr. 
 #'@seealso \code{lm}
 #'@examples
+#'##Not run
+#'
 #'#Use ecm to predict Wilshire 5000 index based on corporate profits, 
 #'#Federal Reserve funds rate, and unemployment rate
 #'data(Wilshire)
@@ -29,20 +33,32 @@
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
 #'modelaveback <- ecmaveback(trn$Wilshire5000, xeq, xtr, k = 5)
 #'print(modelaveback)
-#'#Backwards selection of averaged ECM models chose only CorpProfits in the equilibrium and 
-#'#transient terms.
+#'#Backwards selection chose CorpProfits and FedFundsRate in the equilibrium term, 
+#'#CorpProfits and UnempRate in the transient term.
+#'
+#'modelavebackFFR <- ecmaveback(trn$Wilshire5000, xeq, xtr, k = 5, keep = 'UnempRate')
+#'print(modelavebackFFR)
+#'#Backwards selection was forced to retain UnempRate in both terms.
 #'
 #'@export
 #'@importFrom stats lm complete.cases AIC as.formula drop1
-ecmaveback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k, method = 'boot', seed = 5, weights = NULL, ...) {
+ecmaveback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k, method = 'boot', seed = 5, weights = NULL, keep = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
+  }
+  
+  if (class(xtr) != "data.frame" | class(xeq) != "data.frame") {
+    stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
   }
   
   xeqnames <- names(xeq)
   xeqnames <- paste0(xeqnames, "Lag1")
   xeq <- as.data.frame(xeq)
-  ifelse(ncol(xeq) > 1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ])))
+  if (ncol(xeq) > 1) {
+    xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ])
+  } else {
+    xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ]))
+  }
   
   xtrnames <- names(xtr)
   xtrnames <- paste0("delta", xtrnames)
@@ -57,11 +73,11 @@ ecmaveback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k,
   
   if (includeIntercept){
     formula <- "dy ~ ."
-    full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
   } else {
     formula <- "dy ~ . - 1"
-    full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
   }
+  full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
+  dontdropIdx <- numeric(2)
   
   if (criterion == "AIC" | criterion == "BIC") {
     if (criterion == "AIC") {
@@ -71,31 +87,46 @@ ecmaveback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k,
     }
     
     fullAIC <- partialAIC <- AIC(full, k=kIC)
-    while (partialAIC <= fullAIC){
-      todrop <- rownames(drop1(full, k=kIC))[-grep('none|yLag1', rownames(drop1(full, k=kIC)))][which.min(drop1(full, k=kIC)$AIC[-grep('none|yLag1', rownames(drop1(full, k=kIC)))])]
+    while (partialAIC <= fullAIC & length(rownames(drop1(full))) > length(dontdropIdx)){
+      if (!is.null(keep)) {
+        dontdropIdx <- grep(paste0("none|yLag1", "|", keep), rownames(drop1(full, k = kIC)))
+      } else {
+        dontdropIdx <- grep("none|yLag1", rownames(drop1(full, k = kIC)))
+      }
+      todrop <- rownames(drop1(full, k = kIC))[-dontdropIdx][which.min(drop1(full, k = kIC)$AIC[-dontdropIdx])]
       x <- x[-which(names(x) %in% todrop)]
-      full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
-      partialAIC <- AIC(full)
-      if (partialAIC < fullAIC & length(rownames(drop1(full))) > 2){
+      possible <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
+      partialAIC <- AIC(possible)
+      if (partialAIC < fullAIC & length(rownames(drop1(full))) > length(dontdropIdx)){
         fullAIC <- partialAIC
+        full <- possible
       } else {
         ecm <- full
       }
     }
   } else if (criterion == 'adjustedR2'){
     fullAdjR2 <- partialAdjR2 <- summary(full)$adj.r.sq
-    while (partialAdjR2 >= fullAdjR2) {
+    while (partialAdjR2 >= fullAdjR2 & length(full$coefficients) > length(dontdropIdx)) {
       fullAdjR2 <- summary(full)$adj.r.sq
-      if (includeIntercept){
-        todrop <- which.max(summary(full)$coef[-1, 4])
+      if (!is.null(keep)) {
+        dontdropIdx <- grep(keep, rownames(summary(full)$coef))
+        if (includeIntercept) {
+          dontdropIdx <- c(1, dontdropIdx)
+        }
+        todrop <- which.max(summary(full)$coef[-dontdropIdx, 4])
       } else {
-        todrop <- which.max(summary(full)$coef[, 4])
+        if (includeIntercept) {
+          todrop <- which.max(summary(full)$coef[-1, 4])
+        } else {
+          todrop <- which.max(summary(full)$coef[, 4])
+        }
       }
-      newx <- x[which(!names(x) %in% names(todrop))]
-      full <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
-      partialAdjR2 <- summary(full)$adj.r.sq
-      if (partialAdjR2 >= fullAdjR2) {
+      newx <- x[-todrop]
+      partial <- lmave(formula, data = x, k = k, method = method, seed = seed, weights = weights, ...)
+      partialAdjR2 <- summary(partial)$adj.r.sq
+      if (partialAdjR2 >= fullAdjR2 & length(full$coefficients) > length(dontdropIdx)) {
         x <- newx
+        full <- partial
       } else {
         ecm <- full
       }

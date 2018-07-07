@@ -30,10 +30,12 @@ Each partition excludes k/nrow(data) observations.
 }
 \details{
 In some cases--especially in some time series modeling (see ecmave function)--rather than building one model on the entire dataset, it may be preferable to build multiple models on subsets 
-of the data and average them. The lmave function splits the data into k partitions, builds k models, each on the data without one of the partitions, and then averages the coefficients of these 
+of the data and average them. The lmave function splits the data into k partitions of size (k-1)/k*nrow(data), builds k models, and then averages the coefficients of these 
 models to get a final model. This is similar to averaging multiple tree regression models in algorithms like random forest.
 }
 \examples{
+##Not run
+
 #Build linear models to predict Wilshire 5000 index based on corporate profits, 
 #Federal Reserve funds rate, and unemployment rate
 data(Wilshire)
@@ -46,7 +48,8 @@ modelave <- lmave('Wilshire5000 ~ .', data = Wilshire, k = 5)
 
 }
 \references{
-Jung, Y. & Hu, J. (2016). "A K-fold Averaging Cross-validation Procedure". https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5019184/
+Jung, Y. & Hu, J. (2016). "A K-fold Averaging Cross-validation Procedure". 
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5019184/
 }
 \seealso{
 \code{lm}

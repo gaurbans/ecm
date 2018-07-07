@@ -33,14 +33,17 @@ an lm object representing an error correction model
 Builds multiple ECM models on subsets of the data and averages them.
 }
 \details{
-In some cases, instead of building an ECM on the entire dataset, it may be preferable to build k ECM models on k subsets of the data and then average their coefficients. 
-Reasons to do this include controlling for overfitting or extending the training sample. For example, in many time series modeling exercises, the holdout test sample is 
-often the latest few months or years worth of data. Ideally it's desirable to include these data since they likely have more future predictive power than older observations.
-However, including the entire dataset in the training sample could result in overfitting, or using a different time period as the test sample may be even less representative 
-of future performance. One potential solution is to build multiple ECM models, each with a different holdout test sample, and then average them to get a final ECM. This 
-approach is somewhat similar to the idea of random forest regression, in which multiple regression trees are built on subsets of the data and then averaged.
+In some cases, instead of building an ECM on the entire dataset, it may be preferable to build k ECM models on k subsets of the data, each subset containing (k-1)/k*nrow(data)
+observations of the full dataset, and then average their coefficients. Reasons to do this include controlling for overfitting or extending the training sample. For example, 
+in many time series modeling exercises, the holdout test sample is often the latest few months or years worth of data. Ideally, it's desirable to include these data since 
+they likely have more future predictive power than older observations. However, including the entire dataset in the training sample could result in overfitting, or using a 
+different time period as the test sample may be even less representative of future performance. One potential solution is to build multiple ECM models using the entire dataset, 
+each with a different holdout test sample, and then average them to get a final ECM. This approach is somewhat similar to the idea of random forest regression, in which 
+multiple regression trees are built on subsets of the data and then averaged.
 }
 \examples{
+##Not run
+
 #Use ecm to predict Wilshire 5000 index based on corporate profits, 
 #Federal Reserve funds rate, and unemployment rate
 data(Wilshire)

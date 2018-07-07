@@ -24,6 +24,8 @@ still valid, but the durbinH function in included here in case an autoregressive
 If Durbin's h-statistic is greater than 1.96, it is likely that autocorrelation exists.
 }
 \examples{
+##Not run
+
 #Build a simple AR1 model to predict performance of the Wilshire 5000 Index
 data(Wilshire)
 Wilshire$Wilshire5000Lag1 <- c(NA, Wilshire$Wilshire5000[1:(nrow(Wilshire)-1)])
