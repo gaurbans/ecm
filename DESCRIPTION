@@ -8,7 +8,7 @@ Version: 4.2.0
 Author: Gaurav Bansal
 Maintainer: Gaurav Bansal <gaurbans@gmail.com>
 Description: Functions for easy building of error correction models (ECM) for time series regression. 
-    Source code available at https://github.com/gaurbans/ecm.
+URL: https://github.com/gaurbans/ecm
 License: GPL (>= 2)
 LazyData: TRUE
 RoxygenNote: 6.0.1

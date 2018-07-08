@@ -17,7 +17,7 @@ ecmpredict(model, newdata, init)
 Numeric predictions on new data based ecm object
 }
 \description{
-Takes an ecm object and uses it to predict based on new data.
+Takes an ecm object and uses it to predict based on new data. This prediction does the undifferencing required to transform the change in y back to y itself.
 }
 \details{
 Since error correction models only model the change in the target variable, an initial value must be specified. Additionally, the 'newdata' parameter should have at least 3 rows of data.

@@ -1,6 +1,6 @@
 #'Predict using an ecm object
 #'
-#'Takes an ecm object and uses it to predict based on new data.
+#'Takes an ecm object and uses it to predict based on new data. This prediction does the undifferencing required to transform the change in y back to y itself.
 #'@param model ecm object used to make predictions
 #'@param newdata Data frame to on which to predict
 #'@param init Initial value for prediction

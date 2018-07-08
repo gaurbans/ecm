@@ -87,10 +87,11 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
     fullAIC <- partialAIC <- AIC(full, k = kIC)
     while (partialAIC <= fullAIC & length(rownames(drop1(full))) > length(dontdropIdx)) {
       if (!is.null(keep)) {
-        dontdropIdx <- grep(paste0("none|yLag1", "|", keep), rownames(drop1(full, k = kIC)))
+        dontdropVars <- paste0("none|yLag1", "|^delta", keep, "$", "|^", keep, "Lag1$")
       } else {
-        dontdropIdx <- grep("none|yLag1", rownames(drop1(full, k = kIC)))
+        dontdropVars <- "none|yLag1"
       }
+      dontdropIdx <- grep(dontdropVars, rownames(drop1(full, k = kIC)))
       todrop <- rownames(drop1(full, k = kIC))[-dontdropIdx][which.min(drop1(full, k = kIC)$AIC[-dontdropIdx])]
       x <- x[-which(names(x) %in% todrop)]
       possible <- lm(as.formula(formula), data = x, weights = weights, ...)
@@ -107,7 +108,7 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
     while (partialAdjR2 >= fullAdjR2 & length(full$coefficients) > length(dontdropIdx)) {
       fullAdjR2 <- summary(full)$adj.r.sq
       if (!is.null(keep)) {
-        dontdropIdx <- grep(keep, rownames(summary(full)$coef))
+        dontdropIdx <- grep(paste0("^delta", keep, "$", "|^", keep, "Lag1$"), rownames(summary(full)$coef))
         if (includeIntercept) {
           dontdropIdx <- c(1, dontdropIdx)
         }
