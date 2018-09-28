@@ -4,8 +4,8 @@
 \alias{ecmave}
 \title{Build an averaged error correction model}
 \usage{
-ecmave(y, xeq, xtr, includeIntercept = TRUE, k, method = "boot", seed = 5,
-  weights = NULL, ...)
+ecmave(y, xeq, xtr, includeIntercept = TRUE, k, method = "boot",
+  seed = 5, weights = NULL, ...)
 }
 \arguments{
 \item{y}{The target variable}

@@ -86,10 +86,11 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
     
     fullAIC <- partialAIC <- AIC(full, k = kIC)
     while (partialAIC <= fullAIC & length(rownames(drop1(full))) > length(dontdropIdx)) {
+      dontdropVars <- "^<none>$|^yLag1$"
       if (!is.null(keep)) {
-        dontdropVars <- paste0("none|yLag1", "|^delta", keep, "$", "|^", keep, "Lag1$")
-      } else {
-        dontdropVars <- "none|yLag1"
+        for (i in 1:length(keep)){
+          dontdropVars <- paste0(dontdropVars, "|^delta", keep[i], "$", "|^", keep[i], "Lag1$")
+        }
       }
       dontdropIdx <- grep(dontdropVars, rownames(drop1(full, k = kIC)))
       todrop <- rownames(drop1(full, k = kIC))[-dontdropIdx][which.min(drop1(full, k = kIC)$AIC[-dontdropIdx])]
@@ -108,7 +109,9 @@ ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weigh
     while (partialAdjR2 >= fullAdjR2 & length(full$coefficients) > length(dontdropIdx)) {
       fullAdjR2 <- summary(full)$adj.r.sq
       if (!is.null(keep)) {
-        dontdropIdx <- grep(paste0("^delta", keep, "$", "|^", keep, "Lag1$"), rownames(summary(full)$coef))
+        dontdropVars <- paste0("^delta", keep, "$", "|^", keep, "Lag1$")
+        dontdropVars <- paste0(dontdropVars, collapse = '|')
+        dontdropIdx <- grep(dontdropVars, rownames(summary(full)$coef))
         if (includeIntercept) {
           dontdropIdx <- c(1, dontdropIdx)
         }
