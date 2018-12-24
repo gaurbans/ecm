@@ -18,7 +18,7 @@ ecmave(y, xeq, xtr, includeIntercept = TRUE, k, method = "boot",
 
 \item{k}{The number of models or data partitions desired}
 
-\item{method}{Whether to split data by folds ("fold") or by bootstrapping ("boot")}
+\item{method}{Whether to split data by folds ("fold"), nested folds ("nestedfold"), or bootstrapping ("boot")}
 
 \item{seed}{Seed for reproducibility (only needed if method is "boot")}
 
@@ -30,7 +30,8 @@ ecmave(y, xeq, xtr, includeIntercept = TRUE, k, method = "boot",
 an lm object representing an error correction model
 }
 \description{
-Builds multiple ECM models on subsets of the data and averages them.
+Builds multiple ECM models on subsets of the data and averages them. See the lmave function for more details
+on the methodology and use cases for this approach.
 }
 \details{
 In some cases, instead of building an ECM on the entire dataset, it may be preferable to build k ECM models on k subsets of the data, each subset containing (k-1)/k*nrow(data)

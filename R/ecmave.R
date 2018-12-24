@@ -1,12 +1,13 @@
 #'Build an averaged error correction model
 #'
-#'Builds multiple ECM models on subsets of the data and averages them.
+#'Builds multiple ECM models on subsets of the data and averages them. See the lmave function for more details
+#'on the methodology and use cases for this approach. 
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
 #'@param includeIntercept Boolean whether the y-intercept should be included
 #'@param k The number of models or data partitions desired
-#'@param method Whether to split data by folds ("fold") or by bootstrapping ("boot")
+#'@param method Whether to split data by folds ("fold"), nested folds ("nestedfold"), or bootstrapping ("boot")
 #'@param seed Seed for reproducibility (only needed if method is "boot")
 #'@param weights Optional vector of weights to be passed to the fitting process
 #'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)

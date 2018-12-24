@@ -14,7 +14,7 @@ lmave(formula, data, k, method = "boot", seed = 5, weights = NULL,
 
 \item{k}{The number of models or data partitions desired}
 
-\item{method}{Whether to split data by folds ("fold") or by bootstrapping ("boot")}
+\item{method}{Whether to split data by folds ("fold"), nested folds ("nestedfold"), or bootstrapping ("boot")}
 
 \item{seed}{Seed for reproducibility (only needed if method is "boot")}
 
@@ -27,7 +27,8 @@ an lm object
 }
 \description{
 Builds k lm models on k partitions of the data and averages their coefficients to get create one model. 
-Each partition excludes k/nrow(data) observations.
+Each partition excludes k/nrow(data) observations. See links in the References section for further details on
+this methodology.
 }
 \details{
 In some cases--especially in some time series modeling (see ecmave function)--rather than building one model on the entire dataset, it may be preferable to build multiple models on subsets 
@@ -49,8 +50,9 @@ modelave <- lmave('Wilshire5000 ~ .', data = Wilshire, k = 5)
 
 }
 \references{
-Jung, Y. & Hu, J. (2016). "A K-fold Averaging Cross-validation Procedure". 
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5019184/
+Jung, Y. & Hu, J. (2016). "A K-fold Averaging Cross-validation Procedure". https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5019184/
+
+Cochrane, C. (2018). "Time Series Nested Cross-Validation". https://towardsdatascience.com/time-series-nested-cross-validation-76adba623eb9
 }
 \seealso{
 \code{lm}

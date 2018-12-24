@@ -8,7 +8,7 @@
 #'@param includeIntercept Boolean whether the y-intercept should be included
 #'@param k The number of models or data partitions desired
 #'@param criterion Whether AIC (default), BIC, or adjustedR2 should be used to select variables
-#'@param method Whether to split data by folds ("fold") or by bootstrapping ("boot")
+#'@param method Whether to split data by folds ("fold"), nested folds ("nestedfold"), or bootstrapping ("boot")
 #'@param seed Seed for reproducibility (only needed if method is "boot")
 #'@param weights Optional vector of weights to be passed to the fitting process
 #'@param keep Optional character vector of variables to forcibly retain

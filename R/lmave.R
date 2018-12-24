@@ -1,11 +1,12 @@
 #'Build multiple lm models and average them
 #'
 #'Builds k lm models on k partitions of the data and averages their coefficients to get create one model. 
-#'Each partition excludes k/nrow(data) observations. 
+#'Each partition excludes k/nrow(data) observations. See links in the References section for further details on
+#'this methodology.
 #'@param formula The formula to be passed to lm
 #'@param data The data to be used
 #'@param k The number of models or data partitions desired
-#'@param method Whether to split data by folds ("fold") or by bootstrapping ("boot")
+#'@param method Whether to split data by folds ("fold"), nested folds ("nestedfold"), or bootstrapping ("boot")
 #'@param seed Seed for reproducibility (only needed if method is "boot")
 #'@param weights Optional vector of weights to be passed to the fitting process
 #'@param ... Additional arguments to be passed to the 'lm' function
@@ -15,8 +16,9 @@
 #'of the data and average them. The lmave function splits the data into k partitions of size (k-1)/k*nrow(data), builds k models, and then averages the coefficients of these 
 #'models to get a final model. This is similar to averaging multiple tree regression models in algorithms like random forest. 
 #'@references 
-#'Jung, Y. & Hu, J. (2016). "A K-fold Averaging Cross-validation Procedure". 
-#'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5019184/
+#'Jung, Y. & Hu, J. (2016). "A K-fold Averaging Cross-validation Procedure". https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5019184/
+#'
+#'Cochrane, C. (2018). "Time Series Nested Cross-Validation". https://towardsdatascience.com/time-series-nested-cross-validation-76adba623eb9
 #'@seealso \code{lm}
 #'@examples
 #'##Not run
@@ -37,32 +39,31 @@ lmave <- function(formula, data, k, method = 'boot', seed = 5, weights = NULL, .
   lmall <- lm(formula, data, ...)
   modellist <- 1:k
   
-  if (method == 'fold'){
+  if (method == 'fold' | method == 'nestedfold'){
     folds <- cut(seq(1, nrow(data)), breaks=k, labels=FALSE)
-    models <- lapply(modellist, function(i) {
-      tstIdx <- which(folds==i, arr.ind = TRUE)
-      trn <- data[-tstIdx, ]
-      if (!is.null(weights)){
-        w <- weights[-tstIdx]
-        lm(as.formula(formula), data = trn, weights = w, ...)
-      } else if (is.null(weights)) {
-        lm(as.formula(formula), data = trn, ...)
-      }
-      
-    })
+    if (method == 'fold'){
+      operator <- "!="
+    } else if (method == 'nestedfold'){
+      modellist <- modellist[-1]
+      operator <- "<"
+    }
+    trnIdxExp <- paste0("which(folds", operator, "i)")
+  
   } else if (method == 'boot'){
     set.seed(seed)
-    models <- lapply(modellist, function(i) {
-      tstIdx <- sample(nrow(data), 1 / k * nrow(data))
-      trn <- data[-tstIdx, ]
-      if (!is.null(weights)){
-        w <- weights[-tstIdx]
-        lm(as.formula(formula), data = trn, weights = w, ...)
-      } else if (is.null(weights)){
-        lm(as.formula(formula), data = trn, ...)
-      }
-    })
+    trnIdxExp <- "sample(nrow(data), (k-1) / k * nrow(data))"
   }
+   
+  models <- lapply(modellist, function(i) {
+    trnIdx <- eval(parse(text=trnIdxExp))
+    trn <- data[trnIdx, ]
+    if (!is.null(weights)){
+      w <- weights[trnIdx]
+      lm(as.formula(formula), data = trn, weights = w, ...)
+    } else if (is.null(weights)) {
+      lm(as.formula(formula), data = trn, ...)
+    }
+  })
   
   lmnames <- names(lmall$coefficients)
   lmall$coefficients <- rowMeans(as.data.frame(sapply(models, function(m) coef(m))))

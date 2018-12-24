@@ -20,7 +20,7 @@ ecmaveback(y, xeq, xtr, includeIntercept = T, criterion = "AIC", k,
 
 \item{k}{The number of models or data partitions desired}
 
-\item{method}{Whether to split data by folds ("fold") or by bootstrapping ("boot")}
+\item{method}{Whether to split data by folds ("fold"), nested folds ("nestedfold"), or bootstrapping ("boot")}
 
 \item{seed}{Seed for reproducibility (only needed if method is "boot")}
 
