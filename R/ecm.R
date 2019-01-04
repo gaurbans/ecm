@@ -56,13 +56,24 @@ ecm <- function (y, xeq, xtr, includeIntercept = TRUE, weights = NULL, ...) {
   
   xeqnames <- names(xeq)
   xeqnames <- paste0(xeqnames, "Lag1")
-  ifelse(ncol(xeq) > 1, xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ]), xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ])))
+  if(ncol(xeq) > 1) {
+    xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ])
+  } else {
+    xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ]))
+  }
 
   xtrnames <- names(xtr)
   xtrnames <- paste0("delta", xtrnames)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
   
+  if (class(y)=='data.frame'){
+    if (ncol(y) > 1){
+      warning("You have more than one column in y, only the first will be used")
+    }
+    y <- y[,1]
+  }
   yLag1 <- y[1:(length(y) - 1)]
+  
   x <- cbind(xtr, xeq[complete.cases(xeq), ])
   x <- cbind(x, yLag1)
   names(x) <- c(xtrnames, xeqnames, "yLag1")

@@ -65,7 +65,14 @@ ecmaveback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", k,
   xtr <- as.data.frame(xtr)
   xtr <- data.frame(apply(xtr, 2, diff, 1))
   
+  if (class(y)=='data.frame'){
+    if (ncol(y) > 1){
+      warning("You have more than one column in y, only the first will be used")
+    }
+    y <- y[,1]
+  }
   yLag1 <- y[1:(length(y) - 1)]
+  
   x <- cbind(xtr, xeq[complete.cases(xeq), ])
   x <- cbind(x, yLag1)
   names(x) <- c(xtrnames, xeqnames, "yLag1")
