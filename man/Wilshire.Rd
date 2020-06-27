@@ -4,14 +4,16 @@
 \name{Wilshire}
 \alias{Wilshire}
 \title{FRED data on the Wilshire 5000 index and other economic factors}
-\format{A data frame with 188 rows and 5 variables:
+\format{
+A data frame with 188 rows and 5 variables:
 \describe{
 \item{date}{monthly date}
 \item{Wilshire5000}{quarterly Wilshire 5000 index, in value}
 \item{CorpProfits}{quarterly corporate profits, in value}
 \item{FedFundsRate}{quarterly federal funds rate, in percent}
 \item{UnempRate}{quarterly unemployment rate, in percent}
-}}
+}
+}
 \source{
 \url{https://fred.stlouisfed.org/}
 }

@@ -4,8 +4,19 @@
 \alias{ecmaveback}
 \title{Backwards selection using an averaged error correction model}
 \usage{
-ecmaveback(y, xeq, xtr, includeIntercept = T, criterion = "AIC", k,
-  method = "boot", seed = 5, weights = NULL, keep = NULL, ...)
+ecmaveback(
+  y,
+  xeq,
+  xtr,
+  includeIntercept = T,
+  criterion = "AIC",
+  k,
+  method = "boot",
+  seed = 5,
+  weights = NULL,
+  keep = NULL,
+  ...
+)
 }
 \arguments{
 \item{y}{The target variable}

@@ -42,7 +42,9 @@ ecmpredict <- function (model, newdata, init) {
   if (sum(grepl('Lag1$', names(model$coefficients))) > 1) {
     form <- names(model$coefficients)
     xeqnames <- form[grep("^(?!delta).*", form, perl = T)]
-    xeqnames <- xeqnames[-c(1, length(xeqnames))]
+    if ('(Intercept)' %in% xeqnames){
+      xeqnames <- xeqnames[-c(1, length(xeqnames))]
+    }
     xeqnames <- substr(xeqnames, 1, unlist(lapply(gregexpr("Lag", xeqnames), function(x) x[length(x)])) - 1)
     xeq <- newdata[which(names(newdata) %in% xeqnames)]
     names(xeq) <- paste0(names(xeq), "Lag1")

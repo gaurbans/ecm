@@ -4,8 +4,7 @@
 \alias{lmave}
 \title{Build multiple lm models and average them}
 \usage{
-lmave(formula, data, k, method = "boot", seed = 5, weights = NULL,
-  ...)
+lmave(formula, data, k, method = "boot", seed = 5, weights = NULL, ...)
 }
 \arguments{
 \item{formula}{The formula to be passed to lm}

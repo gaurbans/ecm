@@ -4,12 +4,12 @@ Title: Build Error Correction Models
 Imports:
     stats,
     car
-Version: 4.4.0
+Version: 4.5.0
 Author: Gaurav Bansal
 Maintainer: Gaurav Bansal <gaurbans@gmail.com>
 Description: Functions for easy building of error correction models (ECM) for time series regression. 
 URL: https://github.com/gaurbans/ecm
 License: GPL (>= 2)
 LazyData: TRUE
-RoxygenNote: 6.1.0
+RoxygenNote: 7.1.0
 Encoding: UTF-8

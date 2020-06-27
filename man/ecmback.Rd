@@ -4,8 +4,16 @@
 \alias{ecmback}
 \title{Backwards selection to build an error correction model}
 \usage{
-ecmback(y, xeq, xtr, includeIntercept = T, criterion = "AIC",
-  weights = NULL, keep = NULL, ...)
+ecmback(
+  y,
+  xeq,
+  xtr,
+  includeIntercept = T,
+  criterion = "AIC",
+  weights = NULL,
+  keep = NULL,
+  ...
+)
 }
 \arguments{
 \item{y}{The target variable}
