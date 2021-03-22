@@ -13,33 +13,35 @@
 #'data(Wilshire)
 #'
 #'#Rebuilding model1 from ecm example
-#'trn <- Wilshire[Wilshire$date<='2014-12-01',]
+#'trn <- Wilshire[Wilshire$date<='2015-12-01',]
 #'xeq <- xtr <- trn[c('CorpProfits', 'FedFundsRate', 'UnempRate')]
 #'model1 <- ecm(trn$Wilshire5000, xeq, xtr)
 #'
 #'#Use 2014-12-01 and onwards data as test data to predict
-#'tst <- Wilshire[Wilshire$date>='2014-12-01',]
+#'tst <- Wilshire[Wilshire$date>='2015-12-01',]
 #'
 #'#predict on tst using model1 and initial FedFundsRate
 #'tst$model1Pred <- ecmpredict(model1, tst, tst$Wilshire5000[1])
 #'
 #'@export
 #'@importFrom stats predict
+#'@importFrom utils tail
 ecmpredict <- function (model, newdata, init) {
-  if(nrow(newdata) < 3){
-    stop("Your input for 'newdata' has less that 3 rows. This insufficient to make proper ECM predictions.")
+  lags <- as.integer(substring(tail(names(model$coefficients), 1), nchar(tail(names(model$coefficients), 1))))
+  if(nrow(newdata) < (lags+2)){
+    stop(paste0("Your input for 'newdata' has fewer rows than necessary to predict on a model with ", lags, " lags."))
   }
   if (sum(grepl('^delta', names(model$coefficients))) >= 1) {
     form <- names(model$coefficients)
     xtrnames <- form[grep("^delta", form)]
     xtrnames <- substr(xtrnames, 6, max(nchar(xtrnames)))
     xtr <- newdata[which(names(newdata) %in% xtrnames)]
-    xtr <- data.frame(apply(xtr, 2, diff, 1))
+    xtr <- data.frame(apply(xtr, 2, diff, lags))
     names(xtr) <- paste0("delta", names(xtr))
     xtrnames <- names(xtr)
   }
   
-  if (sum(grepl('Lag1$', names(model$coefficients))) > 1) {
+  if (sum(grepl('Lag[0-9]$', names(model$coefficients))) > 1) {
     form <- names(model$coefficients)
     xeqnames <- form[grep("^(?!delta).*", form, perl = T)]
     if ('(Intercept)' %in% xeqnames){
@@ -47,30 +49,26 @@ ecmpredict <- function (model, newdata, init) {
     }
     xeqnames <- substr(xeqnames, 1, unlist(lapply(gregexpr("Lag", xeqnames), function(x) x[length(x)])) - 1)
     xeq <- newdata[which(names(newdata) %in% xeqnames)]
-    names(xeq) <- paste0(names(xeq), "Lag1")
+    names(xeq) <- paste0(names(xeq), "Lag", lags)
     xeqnames <- names(xeq)
   }
   
   if (exists('xeq')) {
-    if (ncol(xeq) > 1) {
-      xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ])
-    } else if (ncol(xeq) == 1) {
-      xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ]))
-    }
+    xeq <- data.frame(sapply(xeq, lagpad, lags))
   }   
   
   if (exists('xeq') & exists('xtr')) {
     x <- cbind(xtr, xeq[complete.cases(xeq), ])
     x$yLag1 <- init
-    names(x) <- c(xtrnames, xeqnames, "yLag1")
+    names(x) <- c(xtrnames, xeqnames, paste0("yLag", lags))
   } else if (!exists('xeq') & exists('xtr')) {
     x <- xtr 
     x$yLag1 <- init
-    names(x) <- c(xtrnames, "yLag1")
+    names(x) <- c(xtrnames, paste0("yLag", lags))
   } else if (exists('xeq') & !exists('xtr')) {
     x <- as.data.frame(xeq[complete.cases(xeq),])
     x$yLag1 <- init
-    names(x) <- c(xeqnames, "yLag1")
+    names(x) <- c(xeqnames, paste0("yLag", lags))
   }
   
   modelpred <- predict(model, x[1, ])

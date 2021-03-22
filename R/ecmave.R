@@ -5,6 +5,7 @@
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
+#'@param lags The number of lags to use
 #'@param includeIntercept Boolean whether the y-intercept should be included
 #'@param k The number of models or data partitions desired
 #'@param method Whether to split data by folds ("fold"), nested folds ("nestedfold"), or bootstrapping ("boot")
@@ -38,26 +39,26 @@
 #'
 #'@export
 #'@importFrom stats lm
-ecmave <- function (y, xeq, xtr, includeIntercept = TRUE, k, method = 'boot', seed = 5, weights = NULL, ...) {
-  if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
-    warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
+ecmave <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, k, method = 'boot', seed = 5, weights = NULL, ...) {
+  if (sum(grepl("^delta|Lag[0-9]$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
+    warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag[0-9]'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
   }
   
   if (class(xtr) != "data.frame" | class(xeq) != "data.frame") {
     stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
   }
   
-  xeqnames <- names(xeq)
-  xeqnames <- paste0(xeqnames, "Lag1")
-  if(ncol(xeq) > 1) {
-    xeq <- rbind(rep(NA, ncol(xeq)), xeq[1:(nrow(xeq) - 1), ])
-  } else {
-    xeq <- data.frame(c(NA, xeq[1:(nrow(xeq) - 1), ]))
+  if (nrow(xeq) < (lags+1)) {
+    stop("Insufficient data for the lags specified.")
   }
+  
+  xeqnames <- names(xeq)
+  xeqnames <- paste0(xeqnames, paste0("Lag", as.character(lags)))
+  xeq <- data.frame(sapply(xeq, lagpad, lags))
   
   xtrnames <- names(xtr)
   xtrnames <- paste0("delta", xtrnames)
-  xtr <- data.frame(apply(xtr, 2, diff, 1))
+  xtr <- data.frame(apply(xtr, 2, diff, lags))
   
   if (class(y)=='data.frame'){
     if (ncol(y) > 1){
@@ -65,12 +66,12 @@ ecmave <- function (y, xeq, xtr, includeIntercept = TRUE, k, method = 'boot', se
     }
     y <- y[,1]
   }
-  yLag1 <- y[1:(length(y) - 1)]
+  yLag <- y[1:(length(y) - lags)]
   
   x <- cbind(xtr, xeq[complete.cases(xeq), ])
-  x <- cbind(x, yLag1)
-  names(x) <- c(xtrnames, xeqnames, "yLag1")
-  x$dy <- diff(y, 1)
+  x <- cbind(x, yLag)
+  names(x) <- c(xtrnames, xeqnames, paste0("yLag", as.character(lags)))
+  x$dy <- diff(y, lags)
   
   if (includeIntercept){
     formula <- 'dy ~ .'

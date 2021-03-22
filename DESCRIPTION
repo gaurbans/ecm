@@ -3,8 +3,12 @@ Type: Package
 Title: Build Error Correction Models
 Imports:
     stats,
-    car
-Version: 4.5.0
+    utils,
+    car,
+    sandwich,
+    lmtest,
+    urca
+Version: 5.2.0
 Author: Gaurav Bansal
 Maintainer: Gaurav Bansal <gaurbans@gmail.com>
 Description: Functions for easy building of error correction models (ECM) for time series regression. 
