@@ -41,42 +41,42 @@ ecmpredict <- function (model, newdata, init) {
   }
   if (sum(grepl('^delta', coef_names)) >= 1) {
     form <- coef_names
-    xtrnames <- form[grep("^delta", form)]
-    xtrnames <- substr(xtrnames, 6, max(nchar(xtrnames)))
-    xtr <- newdata[which(names(newdata) %in% xtrnames)]
-    xtr <- data.frame(apply(xtr, 2, diff, lags))
-    names(xtr) <- paste0("delta", names(xtr))
-    xtrnames <- names(xtr)
+    xtrfctnames <- form[grep("^delta", form)]
+    xtrfctnames <- substr(xtrfctnames, 6, max(nchar(xtrfctnames)))
+    xtrfct <- newdata[which(names(newdata) %in% xtrfctnames)]
+    xtrfct <- data.frame(apply(xtrfct, 2, diff, lags))
+    names(xtrfct) <- paste0("delta", names(xtrfct))
+    xtrfctnames <- names(xtrfct)
   }
   
   if (sum(grepl('Lag[0-9]$', coef_names)) > 1) {
     form <- coef_names
-    xeqnames <- form[grep("^(?!delta).*", form, perl = T)]
-    if ('(Intercept)' %in% xeqnames){
-      xeqnames <- xeqnames[-c(1, length(xeqnames))]
+    xeqfctnames <- form[grep("^(?!delta).*", form, perl = T)]
+    if ('(Intercept)' %in% xeqfctnames){
+      xeqfctnames <- xeqfctnames[-c(1, length(xeqfctnames))]
     }
-    xeqnames <- substr(xeqnames, 1, unlist(lapply(gregexpr("Lag", xeqnames), function(x) x[length(x)])) - 1)
-    xeq <- newdata[which(names(newdata) %in% xeqnames)]
-    names(xeq) <- paste0(names(xeq), "Lag", lags)
-    xeqnames <- names(xeq)
+    xeqfctnames <- substr(xeqfctnames, 1, unlist(lapply(gregexpr("Lag", xeqfctnames), function(x) x[length(x)])) - 1)
+    xeqfct <- newdata[which(names(newdata) %in% xeqfctnames)]
+    names(xeqfct) <- paste0(names(xeqfct), "Lag", lags)
+    xeqfctnames <- names(xeqfct)
   }
   
-  if (exists('xeq')) {
-    xeq <- data.frame(sapply(xeq, lagpad, lags))
+  if (exists('xeqfct')) {
+    xeqfct <- data.frame(sapply(xeqfct, lagpad, lags))
   }   
   
-  if (exists('xeq') & exists('xtr')) {
-    x <- cbind(xtr, xeq[complete.cases(xeq), ])
+  if (exists('xeqfct') & exists('xtrfct')) {
+    x <- cbind(xtrfct, xeqfct[complete.cases(xeqfct), ])
     x$yLag1 <- init
-    names(x) <- c(xtrnames, xeqnames, paste0("yLag", lags))
-  } else if (!exists('xeq') & exists('xtr')) {
-    x <- xtr 
+    names(x) <- c(xtrfctnames, xeqfctnames, paste0("yLag", lags))
+  } else if (!exists('xeqfct') & exists('xtrfct')) {
+    x <- xtrfct 
     x$yLag1 <- init
-    names(x) <- c(xtrnames, paste0("yLag", lags))
-  } else if (exists('xeq') & !exists('xtr')) {
-    x <- as.data.frame(xeq[complete.cases(xeq),])
+    names(x) <- c(xtrfctnames, paste0("yLag", lags))
+  } else if (exists('xeqfct') & !exists('xtrfct')) {
+    x <- as.data.frame(xeqfct[complete.cases(xeqfct),])
     x$yLag1 <- init
-    names(x) <- c(xeqnames, paste0("yLag", lags))
+    names(x) <- c(xeqfctnames, paste0("yLag", lags))
   }
   
   modelpred <- predict(model, x[1, ])
@@ -86,6 +86,7 @@ ecmpredict <- function (model, newdata, init) {
   }
   modelpred <- predict(model, x)
   modelpred <- cumsum(c(init, modelpred))
+  
   return(modelpred)
 }
 
