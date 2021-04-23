@@ -8,10 +8,11 @@
 #'@param lags The number of lags to use
 #'@param includeIntercept Boolean whether the y-intercept should be included
 #'@param weights Optional vector of weights to be passed to the fitting process
-#'@param ... Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)
+#'@param linearFitter Whether to use 'lm' or 'earth' to fit the model
+#'@param ... Additional arguments to be passed to the 'lm' or 'earth' function (careful that some arguments may not be appropriate for ecm!)
 #'@return an lm object representing an error correction model
 #'@details
-#'The general format of an ECM is \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma(y_{t-1} - (\alpha_{1}x_{1,t-1} +...+ \alpha_{i}x_{i,t-1})).}
+#'The general format of an ECM is \deqn{\Delta y_{t} = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma(y_{t-1} - (\alpha_{1}x_{1,t-1} +...+ \alpha_{i}x_{i,t-1})).}
 #'The ecm function here modifies the equation to the following: \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma y_{t-1} + \gamma_{1}x_{1,t-1} +...+ \gamma_{i}x_{i,t-1},}
 #'\deqn{where \gamma_{i} = -\gamma \alpha_{i},} 
 #'so it can be modeled as a simpler ordinary least squares (OLS) function using R's lm function.
@@ -24,8 +25,10 @@
 #'
 #'When inputting a single variable for xeq or xtr in base R, it is important to input it in the format "xeq=df['col1']" so they inherit the class 'data.frame'. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function. You can load data via other R packages that store data in other formats, as long as those formats also inherit the 'data.frame' class.
 #'
+#'By default, base R's 'lm' is used to fit the model. However, users can opt to use 'earth', which uses Jerome Friedman's Multivariate Adaptive Regression Splines (MARS) to build a regression model, which transforms each continuous variable into piece-wise linear hinge functions. This allows for non-linear features in both the transient and equilibrium terms.
+#'
 #'ECM models are used for time series data. This means the user may need to consider stationarity and/or cointegration before using the model.
-#'@seealso \code{lm}
+#'@seealso \code{lm, earth}
 #'@examples
 #'##Not run
 #'
@@ -64,7 +67,7 @@
 #'
 #'@export
 #'@importFrom stats lm
-ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, ...) {
+ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, linearFitter = 'lm', ...) {
   if (sum(grepl("^delta|Lag[0-9]$", names(xtr))) > 0 | sum(grepl("^delta", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag[0-9]'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
   }
@@ -98,11 +101,20 @@ ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, .
   names(x) <- c(xtrnames, xeqnames, paste0("yLag", as.character(lags)))
   x$dy <- diff(y, lags)
   
-  if (includeIntercept){
-    ecm <- lm(dy ~ ., data = x, weights = weights, ...)
-  } else {
-    ecm <- lm(dy ~ . - 1, data = x, weights = weights, ...)
+  if (linearFitter=='lm'){
+    if (includeIntercept){
+      ecm <- lm(dy ~ ., data = x, weights = weights, ...)
+    } else {
+      ecm <- lm(dy ~ . - 1, data = x, weights = weights, ...)
+    }
+  } else if (linearFitter=='earth'){
+    if (includeIntercept){
+      ecm <- earth::earth(dy ~ ., data = x, weights = weights, linpreds='yLag1', ...)
+    } else {
+      ecm <- earth::earth(dy ~ . - 1, data = x, weights = weights, linpreds='yLag1', ...)
+    }
   }
+  
   
   return(ecm)
 }

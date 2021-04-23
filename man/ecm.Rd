@@ -4,7 +4,16 @@
 \alias{ecm}
 \title{Build an error correction model}
 \usage{
-ecm(y, xeq, xtr, lags = 1, includeIntercept = TRUE, weights = NULL, ...)
+ecm(
+  y,
+  xeq,
+  xtr,
+  lags = 1,
+  includeIntercept = TRUE,
+  weights = NULL,
+  linearFitter = "lm",
+  ...
+)
 }
 \arguments{
 \item{y}{The target variable}
@@ -19,7 +28,9 @@ ecm(y, xeq, xtr, lags = 1, includeIntercept = TRUE, weights = NULL, ...)
 
 \item{weights}{Optional vector of weights to be passed to the fitting process}
 
-\item{...}{Additional arguments to be passed to the 'lm' function (careful in that these may need to be modified for ecm or may not be appropriate!)}
+\item{linearFitter}{Whether to use 'lm' or 'earth' to fit the model}
+
+\item{...}{Additional arguments to be passed to the 'lm' or 'earth' function (careful that some arguments may not be appropriate for ecm!)}
 }
 \value{
 an lm object representing an error correction model
@@ -29,7 +40,7 @@ Builds an lm object that represents an error correction model (ECM) by automatic
 lagging predictor variables according to ECM methodology.
 }
 \details{
-The general format of an ECM is \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma(y_{t-1} - (\alpha_{1}x_{1,t-1} +...+ \alpha_{i}x_{i,t-1})).}
+The general format of an ECM is \deqn{\Delta y_{t} = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma(y_{t-1} - (\alpha_{1}x_{1,t-1} +...+ \alpha_{i}x_{i,t-1})).}
 The ecm function here modifies the equation to the following: \deqn{\Delta y = \beta_{0} + \beta_{1}\Delta x_{1,t} +...+ \beta_{i}\Delta x_{i,t} + \gamma y_{t-1} + \gamma_{1}x_{1,t-1} +...+ \gamma_{i}x_{i,t-1},}
 \deqn{where \gamma_{i} = -\gamma \alpha_{i},} 
 so it can be modeled as a simpler ordinary least squares (OLS) function using R's lm function.
@@ -41,6 +52,8 @@ and the model will be built on one observation less than what the user inputs fo
 the function will not work. Additionally, for the same reason, if using weights in the ecm function, the length of weights should be one less than the number of rows in xeq or xtr.
 
 When inputting a single variable for xeq or xtr in base R, it is important to input it in the format "xeq=df['col1']" so they inherit the class 'data.frame'. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function. You can load data via other R packages that store data in other formats, as long as those formats also inherit the 'data.frame' class.
+
+By default, base R's 'lm' is used to fit the model. However, users can opt to use 'earth', which uses Jerome Friedman's Multivariate Adaptive Regression Splines (MARS) to build a regression model, which transforms each continuous variable into piece-wise linear hinge functions. This allows for non-linear features in both the transient and equilibrium terms.
 
 ECM models are used for time series data. This means the user may need to consider stationarity and/or cointegration before using the model.
 }
@@ -82,5 +95,5 @@ lmtest::coeftest(model2, vcov=sandwich::NeweyWest)
 
 }
 \seealso{
-\code{lm}
+\code{lm, earth}
 }

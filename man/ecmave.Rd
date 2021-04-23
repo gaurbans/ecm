@@ -52,7 +52,9 @@ in many time series modeling exercises, the holdout test sample is often the lat
 they likely have more future predictive power than older observations. However, including the entire dataset in the training sample could result in overfitting, or using a 
 different time period as the test sample may be even less representative of future performance. One potential solution is to build multiple ECM models using the entire dataset, 
 each with a different holdout test sample, and then average them to get a final ECM. This approach is somewhat similar to the idea of random forest regression, in which 
-multiple regression trees are built on subsets of the data and then averaged.
+multiple regression trees are built on subsets of the data and then averaged. 
+
+This function only works with the 'lm' linear fitter.
 }
 \examples{
 ##Not run

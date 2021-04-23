@@ -15,6 +15,8 @@
 #'In some cases--especially in some time series modeling (see ecmave function)--rather than building one model on the entire dataset, it may be preferable to build multiple models on subsets 
 #'of the data and average them. The lmave function splits the data into k partitions of size (k-1)/k*nrow(data), builds k models, and then averages the coefficients of these 
 #'models to get a final model. This is similar to averaging multiple tree regression models in algorithms like random forest. 
+#'
+#'Unlike the 'ecm' functin, this function only works with the 'lm' linear fitter. 
 #'@references 
 #'Jung, Y. & Hu, J. (2016). "A K-fold Averaging Cross-validation Procedure". https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5019184/
 #'
@@ -28,10 +30,10 @@
 #'data(Wilshire)
 #'
 #'#Build one model on the entire dataset
-#'modelall <- lm(Wilshire5000 ~ ., data = Wilshire)
+#'modelall <- lm(Wilshire5000 ~ ., data = Wilshire[-1])
 #'
 #'#Build a five fold averaged linear model on the entire dataset
-#'modelave <- lmave('Wilshire5000 ~ .', data = Wilshire, k = 5) 
+#'modelave <- lmave('Wilshire5000 ~ .', data = Wilshire[-1], k = 5) 
 #'
 #'@export
 #'@importFrom stats lm coef
@@ -67,6 +69,7 @@ lmave <- function(formula, data, k, method = 'boot', seed = 5, weights = NULL, .
   
   lmnames <- names(lmall$coefficients)
   lmall$coefficients <- rowMeans(as.data.frame(sapply(models, function(m) coef(m))))
+   
   names(lmall$coefficients) <- lmnames
   lmall$fitted.values <- predict(lmall, data)
   target <- trimws(gsub('~.*$', '', formula))

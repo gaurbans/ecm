@@ -22,6 +22,7 @@
 #'each with a different holdout test sample, and then average them to get a final ECM. This approach is somewhat similar to the idea of random forest regression, in which 
 #'multiple regression trees are built on subsets of the data and then averaged. 
 #'
+#'This function only works with the 'lm' linear fitter. 
 #'@seealso \code{lm}
 #'@examples
 #'##Not run

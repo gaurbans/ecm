@@ -54,7 +54,9 @@ However, it uses the averaging method of ecmave to build models and then choose 
 \details{
 When inputting a single variable for xeq or xtr, it is important to input it in the format "xeq=df['col1']" in order to retain the data frame class. Inputting such as "xeq=df[,'col1']" or "xeq=df$col1" will result in errors in the ecm function.
 
-If using weights, the length of weights should be one less than the number of rows in xeq or xtr.
+If using weights, the length of weights should be one less than the number of rows in xeq or xtr. 
+
+This function only works with the 'lm' linear fitter.
 }
 \examples{
 ##Not run
