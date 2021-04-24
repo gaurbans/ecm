@@ -9,7 +9,7 @@ Imports:
     lmtest,
     urca,
     earth
-Version: 6.1.0
+Version: 6.2.0
 Author: Gaurav Bansal
 Maintainer: Gaurav Bansal <gaurbans@gmail.com>
 Description: Functions for easy building of error correction models (ECM) for time series regression. 

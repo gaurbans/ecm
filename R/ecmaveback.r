@@ -46,25 +46,38 @@
 #'@export
 #'@importFrom stats lm complete.cases AIC as.formula drop1
 ecmaveback <- function (y, xeq, xtr, lags=1, includeIntercept = T, criterion = "AIC", k, method = 'boot', seed = 5, weights = NULL, keep = NULL, ...) {
-  if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
-    warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
+  if (!is.null(xtr)){
+    if (sum(grepl("^delta|Lag[0-9]$", names(xtr))) > 0) {
+      warning("You have column name(s) in xtr that begin with 'delta' or end with 'Lag[0-9]'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
+    }
+    if (!inherits(xtr, "data.frame")) {
+      stop("xtr does not inherit class 'data.frame'. See details on how to input them as data frames.")
+    }
   }
   
-  if (class(xtr) != "data.frame" | class(xeq) != "data.frame") {
-    stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
+  if (!is.null(xeq)){
+    if (sum(grepl("^delta", names(xeq))) > 0) {
+      warning("You have column name(s) in xeq that begin with 'delta' or end with 'Lag[0-9]'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
+    }
+    if (!inherits(xeq, "data.frame")) {
+      stop("xeq does not inherit class 'data.frame'. See details on how to input them as data frames.")
+    }
+    if (nrow(xeq) < (lags+1)) {
+      stop("Insufficient data for the lags specified.")
+    }
   }
   
-  if (nrow(xeq) < (lags+1)) {
-    stop("Insufficient data for the lags specified.")
+  if (!is.null(xeq)){
+    xeqnames <- names(xeq)
+    xeqnames <- paste0(xeqnames, paste0("Lag", as.character(lags)))
+    xeq <- data.frame(sapply(xeq, lagpad, lags))
   }
   
-  xeqnames <- names(xeq)
-  xeqnames <- paste0(xeqnames, paste0("Lag", as.character(lags)))
-  xeq <- data.frame(sapply(xeq, lagpad, lags))
-  
-  xtrnames <- names(xtr)
-  xtrnames <- paste0("delta", xtrnames)
-  xtr <- data.frame(apply(xtr, 2, diff, lags))
+  if (!is.null(xtr)){
+    xtrnames <- names(xtr)
+    xtrnames <- paste0("delta", xtrnames)
+    xtr <- data.frame(apply(xtr, 2, diff, lags))
+  }
   
   if (class(y)=='data.frame'){
     if (ncol(y) > 1){
@@ -74,9 +87,19 @@ ecmaveback <- function (y, xeq, xtr, lags=1, includeIntercept = T, criterion = "
   }
   yLag <- y[1:(length(y) - lags)]
   
-  x <- cbind(xtr, xeq[complete.cases(xeq), ])
+  if (!is.null(xtr) & !is.null(xeq)){
+    x <- cbind(xtr, xeq[complete.cases(xeq), ])
+    xnames <- c(xtrnames, xeqnames)
+  } else if (!is.null(xtr) & is.null(xeq)){
+    x <- xtr
+    xnames <- xtrnames
+  } else if (is.null(xtr) & !is.null(xeq)){
+    x <- xeq[complete.cases(xeq), ]
+    xnames <- xeqnames
+  }
+  
   x <- cbind(x, yLag)
-  names(x) <- c(xtrnames, xeqnames, paste0("yLag", as.character(lags)))
+  names(x) <- c(xnames, paste0("yLag", as.character(lags)))
   x$dy <- diff(y, lags)
   
   if (includeIntercept){
