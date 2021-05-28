@@ -24,7 +24,7 @@ ecm(
 
 \item{lags}{The number of lags to use}
 
-\item{includeIntercept}{Boolean whether the y-intercept should be included}
+\item{includeIntercept}{Boolean whether the y-intercept should be included (should be set to TRUE if using 'earth' as linearFitter)}
 
 \item{weights}{Optional vector of weights to be passed to the fitting process}
 

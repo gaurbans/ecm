@@ -6,7 +6,7 @@
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
 #'@param lags The number of lags to use
-#'@param includeIntercept Boolean whether the y-intercept should be included
+#'@param includeIntercept Boolean whether the y-intercept should be included (should be set to TRUE if using 'earth' as linearFitter)
 #'@param weights Optional vector of weights to be passed to the fitting process
 #'@param linearFitter Whether to use 'lm' or 'earth' to fit the model
 #'@param ... Additional arguments to be passed to the 'lm' or 'earth' function (careful that some arguments may not be appropriate for ecm!)
