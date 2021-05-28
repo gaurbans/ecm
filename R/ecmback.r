@@ -107,8 +107,9 @@ ecmback <- function (y, xeq, xtr, lags=1, includeIntercept = T, criterion = "AIC
       if (partialAIC < fullAIC & length(rownames(drop1(full))) > length(dontdropIdx)) {
         fullAIC <- partialAIC
         full <- possible
+        ecmeq <- full
       } else {
-        ecm <- full
+        ecmeq <- full
       }
     }
   } else if (criterion == "adjustedR2") {
@@ -136,17 +137,18 @@ ecmback <- function (y, xeq, xtr, lags=1, includeIntercept = T, criterion = "AIC
       if (partialAdjR2 >= fullAdjR2 & length(full$coefficients) > length(dontdropIdx)) {
         x <- newx
         full <- partial
+        ecmeq <- full
       } else {
-        ecm <- full
+        ecmeq <- full
       }
     }
   }
   
-  if (sum(grepl("^delta", names(ecm$coefficients))) == 0) {
+  if (sum(grepl("^delta", names(ecmeq$coefficients))) == 0) {
     warning("Backwards selection has opted to leave out all transient terms from the final model. This means you have a first order differenced autoregressive model of sorts, not a full error correction model.")
-  } else if (sum(grepl("Lag1$", names(ecm$coefficients))) == 0) {
+  } else if (sum(grepl("Lag1$", names(ecmeq$coefficients))) == 0) {
     warning("Backwards selection has opted to leave out all equilibrium terms from the final model. This means you have a first order differenced autoregressive model of sorts, not a full error correction model.")
   }
   
-  return(ecm)
+  return(ecmeq)
 }
