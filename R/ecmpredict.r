@@ -3,7 +3,7 @@
 #'Takes an ecm object and uses it to predict based on new data. This prediction does the undifferencing required to transform the change in y back to y itself.
 #'@param model ecm object used to make predictions
 #'@param newdata Data frame to on which to predict
-#'@param init Initial value for prediction
+#'@param init Initial value(s) for prediction 
 #'@return Numeric predictions on new data based ecm object
 #'@details 
 #'Since error correction models only model the change in the target variable, an initial value must be specified. Additionally, the 'newdata' parameter should have at least 3 rows of data.
@@ -29,22 +29,21 @@
 #'@importFrom stats predict
 #'@importFrom utils tail
 ecmpredict <- function (model, newdata, init) {
-  if (class(model)=='earth') {
+  if (model$linearFitter=='earth') {
     coef_names <- model$namesx
-  } else if (class(model)=='lm') {
+  } else if (model$linearFitter=='lm') {
     coef_names <- names(model$coefficients)
   }
   
-  lags <- as.integer(substring(tail(coef_names, 1), nchar(tail(coef_names, 1))))
-  if(nrow(newdata) < (lags+2)){
-    stop(paste0("Your input for 'newdata' has fewer rows than necessary to predict on a model with ", lags, " lags."))
+  if(nrow(newdata) < 2){
+    stop("Your input for 'newdata' has insufficient data")
   }
   if (sum(grepl('^delta', coef_names)) >= 1) {
     form <- coef_names
     xtrfctnames <- form[grep("^delta", form)]
     xtrfctnames <- substr(xtrfctnames, 6, max(nchar(xtrfctnames)))
     xtrfct <- newdata[which(names(newdata) %in% xtrfctnames)]
-    xtrfct <- data.frame(apply(xtrfct, 2, diff, lags))
+    xtrfct <- data.frame(apply(xtrfct, 2, diff))
     names(xtrfct) <- paste0("delta", names(xtrfct))
     xtrfctnames <- names(xtrfct)
   }
@@ -57,26 +56,26 @@ ecmpredict <- function (model, newdata, init) {
     }
     xeqfctnames <- substr(xeqfctnames, 1, unlist(lapply(gregexpr("Lag", xeqfctnames), function(x) x[length(x)])) - 1)
     xeqfct <- newdata[which(names(newdata) %in% xeqfctnames)]
-    names(xeqfct) <- paste0(names(xeqfct), "Lag", lags)
+    names(xeqfct) <- paste0(names(xeqfct), "Lag1")
     xeqfctnames <- names(xeqfct)
   }
   
   if (exists('xeqfct')) {
-    xeqfct <- data.frame(sapply(xeqfct, lagpad, lags))
+    xeqfct <- data.frame(sapply(xeqfct, lagpad))
   }   
   
   if (exists('xeqfct') & exists('xtrfct')) {
     x <- cbind(xtrfct, xeqfct[complete.cases(xeqfct), ])
     x$yLag1 <- init
-    names(x) <- c(xtrfctnames, xeqfctnames, paste0("yLag", lags))
+    names(x) <- c(xtrfctnames, xeqfctnames, "yLag1")
   } else if (!exists('xeqfct') & exists('xtrfct')) {
     x <- xtrfct 
     x$yLag1 <- init
-    names(x) <- c(xtrfctnames, paste0("yLag", lags))
+    names(x) <- c(xtrfctnames, "yLag1")
   } else if (exists('xeqfct') & !exists('xtrfct')) {
     x <- as.data.frame(xeqfct[complete.cases(xeqfct),])
     x$yLag1 <- init
-    names(x) <- c(xeqfctnames, paste0("yLag", lags))
+    names(x) <- c(xeqfctnames, "yLag1")
   }
   
   modelpred <- predict(model, x[1, ])

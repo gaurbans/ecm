@@ -11,7 +11,7 @@ ecmpredict(model, newdata, init)
 
 \item{newdata}{Data frame to on which to predict}
 
-\item{init}{Initial value for prediction}
+\item{init}{Initial value(s) for prediction}
 }
 \value{
 Numeric predictions on new data based ecm object

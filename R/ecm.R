@@ -5,7 +5,6 @@
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
-#'@param lags The number of lags to use
 #'@param includeIntercept Boolean whether the y-intercept should be included (should be set to TRUE if using 'earth' as linearFitter)
 #'@param weights Optional vector of weights to be passed to the fitting process
 #'@param linearFitter Whether to use 'lm' or 'earth' to fit the model
@@ -49,25 +48,9 @@
 #'xtr <- trn['UnempRate']
 #'model2 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
 #'
-#'#From a strictly statistical standpoint, Wilshire data may not be stationary
-#'#and hence model1 and model2 may have heteroskedasticity in the residuals.
-#'#Let's check for that.
-#'lmtest::bptest(model1)
-#'lmtest::bptest(model2)
-#'#The Breush-Pagan tests suggest we should reject homoskedasticity in the residuals for both models.
-#'
-#'lmtest::bgtest(model1)
-#'lmtest::bgtest(model2)
-#'#The Breusch-Godfrey tests suggest we should reject that there is no serial correlation 
-#'#in the residuals.
-#'
-#'#Given the above issues, see adjusted std. errors and p-values for our models.
-#'lmtest::coeftest(model1, vcov=sandwich::NeweyWest)
-#'lmtest::coeftest(model2, vcov=sandwich::NeweyWest)
-#'
 #'@export
 #'@importFrom stats lm
-ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, linearFitter = 'lm', ...) {
+ecm <- function (y, xeq, xtr, includeIntercept = TRUE, weights = NULL, linearFitter = 'lm', ...) {
   if (!is.null(xtr)){
     if (sum(grepl("^delta|Lag[0-9]$", names(xtr))) > 0) {
       warning("You have column name(s) in xtr that begin with 'delta' or end with 'Lag[0-9]'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' may result in errors or incorrect predictions.")
@@ -84,30 +67,30 @@ ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, l
     if (!inherits(xeq, "data.frame")) {
       stop("xeq does not inherit class 'data.frame'. See details on how to input them as data frames.")
     }
-    if (nrow(xeq) < (lags+1)) {
+    if (nrow(xeq) < 2) {
       stop("Insufficient data for the lags specified.")
     }
   }
   
   if (!is.null(xeq)){
     xeqnames <- names(xeq)
-    xeqnames <- paste0(xeqnames, paste0("Lag", as.character(lags)))
-    xeq <- data.frame(sapply(xeq, lagpad, lags))
+    xeqnames <- paste0(xeqnames, "Lag1")
+    xeq <- data.frame(sapply(xeq, lagpad))
   }
   
   if (!is.null(xtr)){
     xtrnames <- names(xtr)
     xtrnames <- paste0("delta", xtrnames)
-    xtr <- data.frame(apply(xtr, 2, diff, lags))
+    xtr <- data.frame(apply(xtr, 2, diff))
   }
   
-  if (class(y)=='data.frame'){
+  if (is.data.frame(y)){
     if (ncol(y) > 1){
       warning("You have more than one column in y, only the first will be used")
     }
     y <- y[,1]
   }
-  yLag <- y[1:(length(y) - lags)]
+  yLag <- y[1:(length(y) - 1)]
   
   if (!is.null(xtr) & !is.null(xeq)){
     x <- cbind(xtr, xeq[complete.cases(xeq), ])
@@ -121,8 +104,8 @@ ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, l
   }
   
   x <- cbind(x, yLag)
-  names(x) <- c(xnames, paste0("yLag", as.character(lags)))
-  x$dy <- diff(y, lags)
+  names(x) <- c(xnames, paste0("yLag1"))
+  x$dy <- diff(y)
   
   if (linearFitter=='lm'){
     if (includeIntercept){
@@ -137,6 +120,7 @@ ecm <- function (y, xeq, xtr, lags=1, includeIntercept = TRUE, weights = NULL, l
       ecm <- earth::earth(dy ~ . - 1, data = x, weights = weights, linpreds='yLag1', ...)
     }
   }
+  ecm$linearFitter <- linearFitter
   
   return(ecm)
 }

@@ -8,7 +8,6 @@ ecm(
   y,
   xeq,
   xtr,
-  lags = 1,
   includeIntercept = TRUE,
   weights = NULL,
   linearFitter = "lm",
@@ -21,8 +20,6 @@ ecm(
 \item{xeq}{The variables to be used in the equilibrium term of the error correction model}
 
 \item{xtr}{The variables to be used in the transient term of the error correction model}
-
-\item{lags}{The number of lags to use}
 
 \item{includeIntercept}{Boolean whether the y-intercept should be included (should be set to TRUE if using 'earth' as linearFitter)}
 
@@ -76,22 +73,6 @@ model1 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
 xeq <- trn[c('CorpProfits', 'FedFundsRate')]
 xtr <- trn['UnempRate']
 model2 <- ecm(trn$Wilshire5000, xeq, xtr, includeIntercept=TRUE)
-
-#From a strictly statistical standpoint, Wilshire data may not be stationary
-#and hence model1 and model2 may have heteroskedasticity in the residuals.
-#Let's check for that.
-lmtest::bptest(model1)
-lmtest::bptest(model2)
-#The Breush-Pagan tests suggest we should reject homoskedasticity in the residuals for both models.
-
-lmtest::bgtest(model1)
-lmtest::bgtest(model2)
-#The Breusch-Godfrey tests suggest we should reject that there is no serial correlation 
-#in the residuals.
-
-#Given the above issues, see adjusted std. errors and p-values for our models.
-lmtest::coeftest(model1, vcov=sandwich::NeweyWest)
-lmtest::coeftest(model2, vcov=sandwich::NeweyWest)
 
 }
 \seealso{

@@ -5,16 +5,13 @@ Imports:
     stats,
     utils,
     car,
-    sandwich,
-    lmtest,
-    urca,
     earth
-Version: 6.3.0
+Version: 7.0.0
 Author: Gaurav Bansal
 Maintainer: Gaurav Bansal <gaurbans@gmail.com>
 Description: Functions for easy building of error correction models (ECM) for time series regression. 
 URL: https://github.com/gaurbans/ecm
 License: GPL (>= 2)
 LazyData: TRUE
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 Encoding: UTF-8

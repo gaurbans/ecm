@@ -8,7 +8,6 @@ ecmaveback(
   y,
   xeq,
   xtr,
-  lags = 1,
   includeIntercept = T,
   criterion = "AIC",
   k,
@@ -25,8 +24,6 @@ ecmaveback(
 \item{xeq}{The variables to be used in the equilibrium term of the error correction model}
 
 \item{xtr}{The variables to be used in the transient term of the error correction model}
-
-\item{lags}{The number of lags to use}
 
 \item{includeIntercept}{Boolean whether the y-intercept should be included}
 

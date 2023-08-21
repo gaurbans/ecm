@@ -5,7 +5,6 @@
 #'@param y The target variable
 #'@param xeq The variables to be used in the equilibrium term of the error correction model
 #'@param xtr The variables to be used in the transient term of the error correction model
-#'@param lags The number of lags to use
 #'@param includeIntercept Boolean whether the y-intercept should be included
 #'@param criterion Whether AIC (default), BIC, or adjustedR2 should be used to select variables
 #'@param weights Optional vector of weights to be passed to the fitting process
@@ -42,39 +41,39 @@
 #'
 #'@export
 #'@importFrom stats lm complete.cases
-ecmback <- function (y, xeq, xtr, lags=1, includeIntercept = T, criterion = "AIC", weights = NULL, keep = NULL, ...) {
+ecmback <- function (y, xeq, xtr, includeIntercept = T, criterion = "AIC", weights = NULL, keep = NULL, ...) {
   if (sum(grepl("^delta|Lag1$", names(xtr))) > 0 | sum(grepl("^delta|Lag1$", names(xeq))) > 0) {
     warning("You have column name(s) in xeq or xtr that begin with 'delta' or end with 'Lag1'. It is strongly recommended that you change this, otherwise the function 'ecmpredict' will result in errors or incorrect predictions.")
   }
   
-  if (class(xtr) != "data.frame" | class(xeq) != "data.frame") {
+  if (!is.data.frame(xtr) | !is.data.frame(xeq)) {
     stop("xeq or xtr is not of class 'data.frame'. See details on how to input them as data frames.")
   }
   
-  if (nrow(xeq) < (lags+1)) {
+  if (nrow(xeq) < 2) {
     stop("Insufficient data for the lags specified.")
   }
   
   xeqnames <- names(xeq)
-  xeqnames <- paste0(xeqnames, paste0("Lag", as.character(lags)))
-  xeq <- data.frame(sapply(xeq, lagpad, lags))
+  xeqnames <- paste0(xeqnames, "Lag1")
+  xeq <- data.frame(sapply(xeq, lagpad))
   
   xtrnames <- names(xtr)
   xtrnames <- paste0("delta", xtrnames)
-  xtr <- data.frame(apply(xtr, 2, diff, lags))
+  xtr <- data.frame(apply(xtr, 2, diff))
   
-  if (class(y)=='data.frame'){
+  if (is.data.frame(y)){
     if (ncol(y) > 1){
       warning("You have more than one column in y, only the first will be used")
     }
     y <- y[,1]
   }
-  yLag <- y[1:(length(y) - lags)]
+  yLag <- y[1:(length(y) - 1)]
   
   x <- cbind(xtr, xeq[complete.cases(xeq), ])
   x <- cbind(x, yLag)
-  names(x) <- c(xtrnames, xeqnames, paste0("yLag", as.character(lags)))
-  x$dy <- diff(y, lags)
+  names(x) <- c(xtrnames, xeqnames, "yLag1")
+  x$dy <- diff(y)
   
   if (includeIntercept) {
     formula <- 'dy ~ .'
