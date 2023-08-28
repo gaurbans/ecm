@@ -29,17 +29,17 @@
 #'@importFrom stats predict
 #'@importFrom utils tail
 ecmpredict <- function (model, newdata, init) {
-  if (model$linearFitter=='earth') {
-    coef_names <- model$namesx
-  } else if (model$linearFitter=='lm') {
-    coef_names <- names(model$coefficients)
+  if(nrow(newdata) < 2){
+    stop("Your input for 'newdata' has insufficient data.")
   }
   
-  if(nrow(newdata) < 2){
-    stop("Your input for 'newdata' has insufficient data")
+  if (model$linearFitter=='earth') {
+    form <- model$namesx
+  } else if (model$linearFitter=='lm') {
+    form <- names(model$coefficients)
   }
-  if (sum(grepl('^delta', coef_names)) >= 1) {
-    form <- coef_names
+  
+  if (sum(grepl('^delta', form)) >= 1) {
     xtrfctnames <- form[grep("^delta", form)]
     xtrfctnames <- substr(xtrfctnames, 6, max(nchar(xtrfctnames)))
     xtrfct <- newdata[which(names(newdata) %in% xtrfctnames)]
@@ -48,21 +48,14 @@ ecmpredict <- function (model, newdata, init) {
     xtrfctnames <- names(xtrfct)
   }
   
-  if (sum(grepl('Lag[0-9]$', coef_names)) > 1) {
-    form <- coef_names
+  if (sum(grepl('Lag1$', form)) > 1) {
     xeqfctnames <- form[grep("^(?!delta).*", form, perl = T)]
-    if ('(Intercept)' %in% xeqfctnames){
-      xeqfctnames <- xeqfctnames[-c(1, length(xeqfctnames))]
-    }
     xeqfctnames <- substr(xeqfctnames, 1, unlist(lapply(gregexpr("Lag", xeqfctnames), function(x) x[length(x)])) - 1)
     xeqfct <- newdata[which(names(newdata) %in% xeqfctnames)]
     names(xeqfct) <- paste0(names(xeqfct), "Lag1")
+    xeqfct <- data.frame(sapply(xeqfct, lagpad))
     xeqfctnames <- names(xeqfct)
   }
-  
-  if (exists('xeqfct')) {
-    xeqfct <- data.frame(sapply(xeqfct, lagpad))
-  }   
   
   if (exists('xeqfct') & exists('xtrfct')) {
     x <- cbind(xtrfct, xeqfct[complete.cases(xeqfct), ])

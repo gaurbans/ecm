@@ -6,7 +6,7 @@ Imports:
     utils,
     car,
     earth
-Version: 7.0.0
+Version: 7.1.0
 Author: Gaurav Bansal
 Maintainer: Gaurav Bansal <gaurbans@gmail.com>
 Description: Functions for easy building of error correction models (ECM) for time series regression. 
