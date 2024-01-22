@@ -99,7 +99,7 @@ ecm <- function (y, xeq, xtr, includeIntercept = TRUE, weights = NULL, linearFit
     x <- xtr
     xnames <- xtrnames
   } else if (is.null(xtr) & !is.null(xeq)){
-    x <- xeq[complete.cases(xeq), ]
+    x <- as.data.frame(xeq[complete.cases(xeq), ])
     xnames <- xeqnames
   }
   
